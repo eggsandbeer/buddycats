@@ -1,21 +1,36 @@
 import React, { Component } from 'react';
-import Swipeable from 'react-swipeable';
 import images from './images';
+import Carousel from './Carousel';
+import ImageNav from './ImageNav';
+import NavButtons from './NavButtons';
+import scrollTo from './scrollTo';
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
       activeImageIndex: 0,
+      scrollSpeed: 250,
     }
   }
   handleNextEvent(){
     let index;
 
+    // Handle End of Images index edge case
     if(this.state.activeImageIndex === images.length - 1) {
       index = 0;
+      const distanceToGoOver = (images.length+1) * window.innerWidth;
+
+      scrollTo(this.mainImageContainer, distanceToGoOver , this.state.scrollSpeed, (() => {
+        this.mainImageContainer.scrollLeft = 0;
+        const distanceToComeBack = (index+1) * window.innerWidth;
+
+        scrollTo(this.mainImageContainer, distanceToComeBack, this.state.scrollSpeed);
+      }));
+
     } else {
       index = this.state.activeImageIndex+1;
+      scrollTo(this.mainImageContainer, (index+1) * window.innerWidth, this.state.scrollSpeed);
     }
 
     this.setState({
@@ -25,82 +40,68 @@ class App extends Component {
   handlePrevEvent(){
     let index;
 
+    // Handle 0 index edge case
     if(this.state.activeImageIndex === 0) {
       index = images.length-1;
+
+      scrollTo(this.mainImageContainer, 0, this.state.scrollSpeed, (() => {
+        this.mainImageContainer.scrollLeft = (index + 2) * window.innerWidth;
+        const distanceToComeBack = (index + 1) * window.innerWidth;
+
+        scrollTo(this.mainImageContainer, distanceToComeBack, this.state.scrollSpeed);
+      }));
+
     } else {
       index = this.state.activeImageIndex-1;
+      scrollTo(this.mainImageContainer, (index+1) * window.innerWidth, this.state.scrollSpeed);
     }
 
     this.setState({
       activeImageIndex: index,
     });
   }
+  handleSwipe(e, x){
+    if(x < -100 || x > 100 ){
+      if(x < 0){
+        this.handlePrevEvent();
+      } else {
+        this.handleNextEvent();
+      }
+    } else {
+      scrollTo(this.mainImageContainer, (this.state.activeImageIndex+1) * window.innerWidth, this.state.scrollSpeed);
+    }
+  }
   handleImageNavClick(index){
     this.setState({
       activeImageIndex: index,
     });
+
+    scrollTo(this.mainImageContainer, (index+1) * window.innerWidth, this.state.scrollSpeed);
   }
-  handleActiveClass(index){
-    if(index === this.state.activeImageIndex){
-      return {
-        borderBottom: '8px solid rgb(1, 255, 194)'
-      }
-    }
+  componentDidMount(){
+    scrollTo(this.mainImageContainer, this.state.activeImageIndex+1 * window.innerWidth, this.state.scrollSpeed);
   }
   render() {
     return (
-      <div>
-        <div className="clearfix mt1 mb1">
-          <Swipeable
-            className="col col-12"
-            onSwipedRight={this.handlePrevEvent.bind(this)}
-            onSwipedLeft={this.handleNextEvent.bind(this)}
-          >
-          {/*
-            So, normally here I would bring in some css modules or postcss
-            to handle my js inline styles here, but create-react-app is a
-            little limited in it's styling and doesn't give me a a good
-            webpack entry point, so it's bit hacky..
-          */}
-            <div
-              className="block mx-auto"
-              style={{
-                height: '300px',
-                backgroundImage: `url(${images[this.state.activeImageIndex].src})`,
-                backgroundSize: 'contain',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center center'
-              }}
-              alt={images[this.state.activeImageIndex].tag}
-              src={images[this.state.activeImageIndex].src}
-            />
-          </Swipeable>
+      <div className="MasterContainer mt2">
+        <div
+          className="Carousel mb2"
+          ref={(mainImageContainer) => {this.mainImageContainer = mainImageContainer;}}
+        >
+          <Carousel
+            images={images}
+            handleSwipe={this.handleSwipe.bind(this)}
+          />
         </div>
-        <div className="clearfix mb2">
-          <div className="col col-6">
-            <button className="btn block right p2 mr1" onClick={this.handlePrevEvent.bind(this)}>
-              PREV
-            </button>
-          </div>
-          <div className="col col-6">
-            <button className="btn left p2 ml1" onClick={this.handleNextEvent.bind(this)}>
-              NEXT
-            </button>
-          </div>
-        </div>
-        <div className="nav clearfix flex">
-        {images.map((image, i) =>
-          <div key={`nav-item-${i}`} >
-            <img
-              className="fit"
-              style={this.handleActiveClass(i)}
-              alt={image.tag + 'as a nav item'}
-              src={image.src}
-              onClick={()=> this.handleImageNavClick(i) }
-            />
-          </div>
-        )}
-        </div>
+        <NavButtons
+          handlePrevEvent={this.handlePrevEvent.bind(this)}
+          handleNextEvent={this.handleNextEvent.bind(this)}
+        />
+        <ImageNav
+          images={images}
+          activeImageIndex={this.state.activeImageIndex}
+          handleNavClick={this.handleImageNavClick.bind(this)}
+        />
       </div>
     );
   }

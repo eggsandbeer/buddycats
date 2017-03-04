@@ -4,6 +4,29 @@ body {
   font-family: sans-serif;
   background-color: gold;
 }
+.MasterContainer {
+  width: 100vw;
+}
+.Carousel {
+  width: 100vw;
+  overflow: scroll;
+}
+.Carousel::-webkit-scrollbar {
+  display: none;
+}
+.FakeImage {
+  width: 100vw;
+  height: 300px;
+}
+.ImageContainer {
+  width: 100vw;
+}
+.Image {
+  height: 300px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
 button {
   font-family: 'Roboto', sans-serif;
   background-color: gold;
@@ -13,6 +36,7 @@ button {
   cursor: pointer;
   border-radius: 30px
 }
+
 .nav img {
   cursor: pointer;
 }
